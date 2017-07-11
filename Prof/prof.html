@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+        <link rel="stylesheet" type="text/css" href="prof.css">
+
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js" type="text/javascript"></script>
+
+        <!--noi scripturi !-->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+        
+        
+        
+        <!--noi scripturi END!-->
+
+        <script type="text/javascript" src="prof.js"></script>
+
+       
+        <title>Professor Dashboard</title>
+    </head>
+
+    <body ng-app="DotnetProject" ng-controller="dashboardController" ng-init="initializare()">
+
+        <div class="container col-md-10 col-md-offset-1">
+            <ul class="nav nav-pills nav-justified">
+                <li ><a class="btn" ng-click="goProfile()" ><span class="glyphicon glyphicon-user" ></span></a></li>
+                <li><a class="btn btn-create-test" ng-click="newTest()"><span class="glyphicon glyphicon-pencil"></span></a></li>
+                <li><a class="btn" ng-click="putGrades()" ><span class="glyphicon glyphicon-check"></span></a></li>
+                <li><a class="btn" ng-click="seeStatistics()"><span class="glyphicon glyphicon-stats"></span></a></li>
+            </ul>
+        </div>
+
+
+        <div  class="container form-create-test sample-show-hide " ng-show="test && !addQuestions"> <br/>
+
+            <div class="col-md-10 col-md-offset-1 well well-ms">
+
+
+                <form class="form-horizontal" name="testForm"  role="form" action="action_page.php">
+
+                    <div class="form-group form-group-lg">
+                        <div class="col-md-4 col-md-offset-4 titlu"><p>Create Test!<p></div>
+                    </div> 
+
+
+                    <div class="form-group form-group-lg">
+                        <label for="title" class="col-md-2 ">Title</label>
+                        <div class=" col-md-10">
+                            <input  type="text" name="title" id="title" class="form-control" ng-class="(!title && (!testForm.title.$pristine || addQuestionsClicked)) ? 'error' : ''" ng-model="title" placeholder="Write a title..." required>
+                        </div>
+                        <span class="col-md-8 col-md-offset-2 warningMessage" ng-show="!title && addQuestionsClicked">A title is required!</span>
+                    </div> 
+
+
+                    <div class="form-group form-group-lg">	
+                        <label for="nrQuestions" class="col-md-2 ">Questions</label>
+
+                        <div class="col-md-4">
+                            <input type="number" min="1" max="50" id="nrQuestions" name="nrQuestions" class="form-control  " ng-class="((!nrQuestions || nrQuestions < 0 || nrQuestions > 50) && (!testForm.nrQuestions.$pristine || addQuestionsClicked)) ? 'error' : ''" ng-model="nrQuestions" placeholder="Number of question..." />
+                            <span class="warningMessage" ng-show="(!nrQuestions || nrQuestions < 0 || nrQuestions > 50) && addQuestionsClicked"> Invalid number of questions!</span>
+                        </div>
+
+                        <label for="time" class="col-md-2"> Time </label>
+
+                        <div class="col-md-4">
+                            <input type="number" min="1" max="180" id="time" name="time" class="form-control" ng-class="((!time || time < 0 || time > 180) && (!testForm.time.$pristine || addQuestionsClicked)) ? 'error' : ''"
+                                   ng-model="time" placeholder="Write time in minutes..." />
+                            <span class="warningMessage" aria-live="polite" ng-show="(!time || time < 0 || time > 180) && addQuestionsClicked"> Invalid number of minutes!</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group form-group-lg">
+
+                        <label for="year" class="col-md-2">Add students</label>
+
+                        <div class="dropdown col-md-2" ng-init="years = ['1', '2', '3', 'MSI1', 'MSI2']">
+                            <div class="selectContainer">
+                                <select class="form-control"  ng-class="!year && addQuestionsClicked ? 'error' : ''"
+                                        ng-model="year" ng-options="year for year in years" >
+                                    <option value="" disabled selected hidden>Year</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="dropdown col-md-2">
+                            <div class="selectContainer">
+                                <select class="form-control"  ng-class="!group && addQuestionsClicked ? 'error' : ''"
+                                        ng-model="group" ng-options="grupa for grupa in groups" >
+                                    <option value="" disabled selected hidden>Group</option>
+                                </select>
+                            </div>
+                        </div>
+
+
+                        <div class="col-md-6">
+                            <a type="button" class="btn btn-default col-md-12 btn-save-test" ng-click="newQuestions()" >
+                                <span class="glyphicon glyphicon-plus"> </span> 
+                                Questions
+                            </a>
+                        </div>
+                    </div>
+
+                </form>
+
+            </div>
+        </div>
+
+        <!--START Form for Add Questions-->
+        <div class="container" ng-show="test && addQuestions && (questions.length < nrQuestions)"> <br/>
+
+            <div class="col-md-10 col-md-offset-1 well well-ms">
+                <form class="form-horizontal" name="questionForm"  role="form">
+
+                    <div class="form-group form-group-lg">
+                        <div class="col-md-4 page" ><p>{{questions.length + 1}}/{{nrQuestions}}<p></div>
+                    </div>
+
+                    <div class = "form-group">
+                        <label for = "question" class="col-md-2">Question</label>
+                        <div class="col-md-10">
+                            <textarea class = "form-control input-lg" name="question" id="question" rows = "4" placeholder="Write a question..." ng-model="question"></textarea>
+                        </div>
+                    </div>
+
+
+                    <div class = "form-group">
+                        <div class="col-md-8 col-md-offset-2">
+                            <a type="button" class="btn btn-default col-md-4" ng-click="addOptions()" >
+                                <span ng-class="!options ? 'glyphicon glyphicon-plus' : 'glyphicon glyphicon-minus'"></span> Options
+                            </a>
+
+                            <a type="button" class="btn btn-default col-md-4  col-md-offset-1" ng-click="saveQuestion(questions, question)" ng-show="!options">
+                                <span class="glyphicon glyphicon-ok"></span> Save
+                            </a>
+
+                        </div>
+                    </div>
+
+                    <!-- START formular adauga optiuni de raspuns-->
+                    <div  ng-show="options && test">
+                        <div class = "form-group">
+                            <label for = "A" class="col-md-2">A</label>
+                            <div class="col-md-10">
+                                <textarea name = "A" class = "form-control input-lg" id="A"  ng-model= "A" rows = "1" placeholder="Write a posible answer..." required></textarea>
+                            </div>
+                            <p>{{ A.$valid}}</p>
+                        </div>
+                        <div class = "form-group">
+                            <label for = "B" class="col-md-2">B</label>
+                            <div class="col-md-10">
+                                <textarea class = "form-control input-lg" id="B" ng-model="B" rows = "1" placeholder="Write a posible answer..."></textarea>
+                            </div>
+                        </div>
+                        <div class = "form-group">
+                            <label for = "C" class="col-md-2">C</label>
+                            <div class="col-md-10">
+                                <textarea class = "form-control input-lg" id ="C" ng-model="C" rows = "1" placeholder="Write a posible answer..."></textarea>
+                            </div>
+                        </div>
+                        <div class = "form-group">
+                            <label for = "D" class="col-md-2">D</label>
+                            <div class="col-md-10">
+                                <textarea class = "form-control input-lg" id="D" ng-model="D" rows = "1" placeholder="Write a posible answer..."></textarea>
+                            </div>
+                        </div>
+
+
+                        <div class = "form-group">
+                            <label for = "Solution" class="col-md-2">Solution</label>
+                            <div class="col-md-10">
+
+                                <a type="button" class="btn btn-default col-md-1" ng-class= "statusA ? 'btn-yes' : 'btn-no'" ng-click="addA()" >
+                                    <span ng-class="statusA ? 'glyphicon glyphicon-ok' : 'glyphicon glyphicon-remove'"></span> A
+                                </a>
+                                <a type="button" class="btn btn-default col-md-1 col-md-offset-1" ng-class= "statusB ? '' : 'btn-no'" ng-click="addB()">
+                                    <span ng-class="statusB ? 'glyphicon glyphicon-ok' : 'glyphicon glyphicon-remove'"></span> B
+                                </a>
+                                <a type="button" class="btn btn-default col-md-1 col-md-offset-1" ng-class= "statusC ? '' : 'btn-no'" ng-click="addC()">
+                                    <span ng-class="statusC ? 'glyphicon glyphicon-ok' : 'glyphicon glyphicon-remove'"></span> C 
+                                </a>
+                                <a type="button" class="btn btn-default col-md-1 col-md-offset-1" ng-class= "statusD ? '' : 'btn-no'" ng-click="addD()">
+                                    <span ng-class="statusD ? 'glyphicon glyphicon-ok' : 'glyphicon glyphicon-remove'"></span> D
+                                </a>
+
+                            </div>
+                        </div>
+
+                        <div class = "form-group">
+                            <div class="col-md-8  col-md-offset-2">
+                                <a type="submit" class="btn btn-default col-md-4" ng-click="saveQuestion(questions, question, A, B, C, D);" >
+                                    <span class="glyphicon glyphicon-ok"></span> Save
+                                </a>
+                            </div>
+                        </div>
+
+                    </div>
+                    <!-- END formular adauga optiuni de raspuns-->
+                </form>
+            </div> 
+        </div>
+        <!--END Form for Add Questions-->
+
+        <!--START Finalize Test !-->
+        <div class="container" ng-show="test && questions.length === nrQuestions && !finalizedTest">
+            <div class="col-md-10 col-md-offset-1 panel-final well well-ms">
+                <div class="form-group form-group-lg">
+                    <div class="col-md-6 col-md-offset-3 titlu txt-final"><p>Do you want to finalize Test?<p></div>
+                </div>            
+                <div class = "form-group">
+                    <div class="col-md-6 col-md-offset-3 ">
+                        <a type="button" class="btn btn-default col-md-12 btn-final-yes" ng-click="finalizeTest()" >
+                            <span class="glyphicon glyphicon-ok"></span> Finalize Test
+                        </a>
+                    </div>               
+                </div>
+
+                <div class = "form-group">
+                    <div class="col-md-6 col-md-offset-3 ">
+                        <a type="button" class="btn btn-default col-md-12 btn-final-no" ng-click="cancelTest()" >
+                            <span class="glyphicon glyphicon-remove" ></span> Cancel Test
+                        </a>
+                    </div>               
+                </div>
+            </div>
+        </div>
+
+        <div class="container" ng-show="questions.length === nrQuestions && finalizedTest" >
+            <div class="col-md-10 col-md-offset-1 panel-final well well-ms">
+                <div class="form-group form-group-lg">
+                    <div class="col-md-8 col-md-offset-2 titlu txt-final"><p> The test was successfully created! <p></div>
+                </div>            
+            </div>
+        </div>
+        <!--END Finalize Test -->
+
+        <!--START Profile Page -->
+        <div class="container" ng-show="profile">
+            <div class="col-md-10 col-md-offset-1 well well-ms">
+                <form class="form-horizontal" name="profileForm"  role="form">
+
+                    <div class="form-group form-group-lg">
+                        <div class="col-md-6 col-md-offset-3 titlu "><p>Welcome, username!<p></div>
+                    </div>
+
+                    <div class = "form-group" >
+                        <div class="col-md-4 col-md-offset-3 ">
+                            <a type="button" class="btn btn-default col-md-12 btn-final-yes" ng-click="changePasswordClicked = !changePasswordClicked" >
+                                Change password
+                            </a>
+                        </div>               
+                    </div>
+
+                    <div class="form-group form-group-lg" ng-show="changePasswordClicked">
+                        <label for="oldPassword" class="col-md-3 ">Old Password</label>
+                        <div class=" col-md-9">
+                            <input  type="text" name="oldPassword"  class="form-control"  ng-model="oldPassword" ng-class="(saveChangedPassword && !oldPassword) ? 'error' : ''" placeholder="Write old password...">
+                        </div>
+                        <div class="col-md-6 col-md-offset-3 warningMessage" ng-show="saveChangedPassword && !oldPassword">Required!</div>
+
+
+                    </div> 
+
+                    <div class="form-group form-group-lg" ng-show="changePasswordClicked">
+                        <label for="newPassword" class="col-md-3 ">New Password</label>
+                        <div class=" col-md-9">
+                            <input  type="text" name="newPassword" id="title" class="form-control"  ng-model="newPassword" ng-class="((saveChangedPassword && !newPassword) || (newPassword && ('' + newPassword).length < 6)) ? 'error' : ''" placeholder="Write new password..." required>
+
+                        </div>
+                        <div class="col-md-6 col-md-offset-3 warningMessage" ng-show="((saveChangedPassword && !newPassword) || (newPassword && ('' + newPassword).length < 6))">Must have at least 6 characters!</div>
+                    </div> 
+
+                    <div class="form-group form-group-lg" ng-show="changePasswordClicked">
+                        <label for="newPasswordAgain" class="col-md-3 ">New Password</label>
+                        <div class=" col-md-9">
+                            <input  type="text" name="newPasswordAgain" id="title" class="form-control"  ng-model="newPasswordAgain" ng-class="((saveChangedPassword && !newPasswordAgain) || newPassword != newPasswordAgain) ? 'error' : ''" placeholder="Re-write new password..." required>
+                        </div>
+                        <div class="col-md-6 col-md-offset-3 warningMessage" ng-show=" newPassword !== newPasswordAgain">Does not match new password!</div>
+                    </div>
+
+                    <div class = "form-group" ng-show="changePasswordClicked">
+                        <div class="col-md-4 col-md-offset-3 ">
+                            <a type="button" class="btn btn-default col-md-12 btn-final-yes" ng-click="changePassword()" >
+                                <span class="glyphicon glyphicon-ok"></span> Save
+                            </a>
+                        </div>               
+                    </div>
+
+                </form>
+            </div>
+        </div>
+        <!--END Profile page -->
+
+        <!--START grades page-->
+
+        <div  class="container form-create-test sample-show-hide " ng-show="grades"> <br/>
+
+            <div class="col-md-10 col-md-offset-1 well well-ms">
+
+
+                <form class="form-horizontal" name=""  role="form" >
+
+                    <div class = "form-group">
+                        <label class="col-md-2">Question:</label>
+                        <div class="col-md-10 question-style">
+                            <p> This fact helps to explain the colossal number of traffic accidents
+                                in which drivers hit pedestrians in plain view, collide with cars
+                                directly in front of them, and even intersect unluckily with trains.
+                                In many of these cases, the eyes are in the right place, but the
+                                brain isn't seeing the stimuli   </p>
+                        </div>
+                    </div>
+                    
+                    <div class = "form-group">
+                        <label class="col-md-2">Answers:</label>
+                        <div class="col-md-10 question-style">
+                            <p> {{ questions.length }} </p>
+                        </div>
+                    </div>
+
+                    <div class = "form-group" >
+                        <div class="col-md-10  col-md-offset-2">
+                            <a type="button" class="btn btn-default col-md-3" ng-click="evaluateClicked = !evaluateClicked" >
+                                <span class="glyphicon glyphicon-check"></span> Evaluate
+                            </a>
+                        </div>
+                    </div>
+
+                    <div ng-class="points < 0 && scoreClicked ? 'error ' : ''" ng-show="evaluateClicked">
+                        
+                        <div class="form-group form-group-lg" >
+                            <label class="col-md-2 "> Answer :</label>
+                            <div class=" col-md-10 question-style">
+                                <p>The lessons here are simple, but they are not obvious, even to
+                                    brain scientists. For decades, vision researchers barked up the wrong
+                                    tree by trying to figure out how the visual brain reconstructed a
+                                    full three-dimensional representation of the outside world. 
+                                </p>
+                            </div>
+
+                        </div> 
+
+                        <div class="form-group form-group-lg" ng-init="points = -1">
+                            <label class="col-md-2 " >Score:</label>
+                            <div class=" col-md-10">
+
+                                <a type="button" class="btn btn-default col-md-1" ng-class= "points === 0 ? 'btn-yes' : 'btn-no'" ng-click="points = 0" >
+                                    <span ng-class="points === 0 ? 'glyphicon glyphicon-ok' : 'glyphicon glyphicon-remove'"></span> 0
+                                </a>
+                                <a type="button" class="btn btn-default col-md-1 col-md-offset-1" ng-class= "points === 1 ? 'btn-yes' : 'btn-no'" ng-click="points = 1" >
+                                    <span ng-class="points === 1 ? 'glyphicon glyphicon-ok' : 'glyphicon glyphicon-remove'"></span> 1
+                                </a>
+                                <a type="button" class="btn btn-default col-md-1 col-md-offset-1" ng-class= "points === 2 ? '' : 'btn-no'" ng-click="points = 2">
+                                    <span ng-class="points === 2 ? 'glyphicon glyphicon-ok' : 'glyphicon glyphicon-remove'"></span> 2
+                                </a>
+                                <a type="button" class="btn btn-default col-md-1 col-md-offset-1" ng-class= "points === 3 ? '' : 'btn-no'" ng-click="points = 3">
+                                    <span ng-class="points === 3 ? 'glyphicon glyphicon-ok' : 'glyphicon glyphicon-remove'"></span> 3 
+                                </a>
+                                <a type="button" class="btn btn-default col-md-1 col-md-offset-1" ng-class= "points === 4 ? '' : 'btn-no'" ng-click="points = 4">
+                                    <span ng-class="points === 4 ? 'glyphicon glyphicon-ok' : 'glyphicon glyphicon-remove'"></span> 4
+                                </a>
+
+                            </div>
+                            <span class="col-md-8 col-md-offset-2 warningMessage" ng-show="points < 0 && scoreClicked"> Please choose a score for the answer!</span>
+
+                        </div>
+
+                    </div>
+
+                    <div class = "form-group" ng-show="evaluateClicked">
+                        <div class="col-md-8  col-md-offset-2">
+
+                            <a type="submit" class="btn btn-default col-md-4" ng-click="scoreClicked = true" >
+                                <span class="glyphicon glyphicon-ok"></span> Save
+                            </a>
+
+                        </div>
+                    </div>
+
+
+                </form>
+            </div>
+        </div>
+        <!--END grades page -->
+
+        <div class="container" ng-show="statistics" ng-init="chart()">
+            <div class="col-md-10 col-md-offset-1 well well-ms">
+                <div class="form-group form-group-lg">
+                    <div class="col-md-6 page" ><p>Avg: ... <p></div>
+                </div>
+
+                <div class="col-md-8 col-md-offset-2">
+                    <div id="myChart"></div>
+                    <script>
+                          Highcharts.chart('myChart', {
+                chart: {
+                    type: 'column'
+                },
+                plotBackgroundImage: null,
+                backgroundColor:'red',
+                title: {
+                    text: 'Statistics Last Test'
+                },
+                
+                xAxis: {
+                    type: 'category'
+                },
+                yAxis: {
+                    title: {
+                        text: 'Total percent market share'
+                    }
+
+                },
+                legend: {
+                    enabled: false
+                },
+                plotOptions: {
+                    series: {
+                        borderWidth: 0,
+                        dataLabels: {
+                            enabled: true,
+                            format: '{point.y:.1f}%'
+                        }
+                    }
+                },
+
+                tooltip: {
+                    headerFormat: '<span style="font-size:11px">{series.name}</span><br>',
+                    pointFormat: '<span style="color:{point.color}">{point.name}</span>: <b>{point.y:.2f}%</b> of total<br/>'
+                },
+
+                series: [{
+                    name: 'Brands',
+                    colorByPoint: true,
+                    data: [{
+                        name: 'Microsoft Internet Explorer',
+                        y: 56.33,
+                        drilldown: 'Microsoft Internet Explorer'
+                    }, {
+                        name: 'Chrome',
+                        y: 24.03,
+                        drilldown: 'Chrome'
+                    }, {
+                        name: 'Firefox',
+                        y: 10.38,
+                        drilldown: 'Firefox'
+                    }, {
+                        name: 'Safari',
+                        y: 4.77,
+                        drilldown: 'Safari'
+                    }, {
+                        name: 'Opera',
+                        y: 0.91,
+                        drilldown: 'Opera'
+                    }, {
+                        name: 'Proprietary or Undetectable',
+                        y: 0.2,
+                        drilldown: null
+                    }]
+                }],
+                drilldown: {
+                    series: [{
+                        name: 'Microsoft Internet Explorer',
+                        id: 'Microsoft Internet Explorer',
+                        data: [
+                            [
+                                'v11.0',
+                                24.13
+                            ],
+                            [
+                                'v8.0',
+                                17.2
+                            ],
+                            [
+                                'v9.0',
+                                8.11
+                            ],
+                            [
+                                'v10.0',
+                                5.33
+                            ],
+                            [
+                                'v6.0',
+                                1.06
+                            ],
+                            [
+                                'v7.0',
+                                0.5
+                            ]
+                        ]
+                    }, {
+                        name: 'Chrome',
+                        id: 'Chrome',
+                        data: [
+                            [
+                                'v40.0',
+                                5
+                            ],
+                            [
+                                'v41.0',
+                                4.32
+                            ],
+                            [
+                                'v42.0',
+                                3.68
+                            ],
+                            [
+                                'v39.0',
+                                2.96
+                            ],
+                            [
+                                'v36.0',
+                                2.53
+                            ],
+                            [
+                                'v43.0',
+                                1.45
+                            ],
+                            [
+                                'v31.0',
+                                1.24
+                            ],
+                            [
+                                'v35.0',
+                                0.85
+                            ],
+                            [
+                                'v38.0',
+                                0.6
+                            ],
+                            [
+                                'v32.0',
+                                0.55
+                            ],
+                            [
+                                'v37.0',
+                                0.38
+                            ],
+                            [
+                                'v33.0',
+                                0.19
+                            ],
+                            [
+                                'v34.0',
+                                0.14
+                            ],
+                            [
+                                'v30.0',
+                                0.14
+                            ]
+                        ]
+                    }, {
+                        name: 'Firefox',
+                        id: 'Firefox',
+                        data: [
+                            [
+                                'v35',
+                                2.76
+                            ],
+                            [
+                                'v36',
+                                2.32
+                            ],
+                            [
+                                'v37',
+                                2.31
+                            ],
+                            [
+                                'v34',
+                                1.27
+                            ],
+                            [
+                                'v38',
+                                1.02
+                            ],
+                            [
+                                'v31',
+                                0.33
+                            ],
+                            [
+                                'v33',
+                                0.22
+                            ],
+                            [
+                                'v32',
+                                0.15
+                            ]
+                        ]
+                    }, {
+                        name: 'Safari',
+                        id: 'Safari',
+                        data: [
+                            [
+                                'v8.0',
+                                2.56
+                            ],
+                            [
+                                'v7.1',
+                                0.77
+                            ],
+                            [
+                                'v5.1',
+                                0.42
+                            ],
+                            [
+                                'v5.0',
+                                0.3
+                            ],
+                            [
+                                'v6.1',
+                                0.29
+                            ],
+                            [
+                                'v7.0',
+                                0.26
+                            ],
+                            [
+                                'v6.2',
+                                0.17
+                            ]
+                        ]
+                    }, {
+                        name: 'Opera',
+                        id: 'Opera',
+                        data: [
+                            [
+                                'v12.x',
+                                0.34
+                            ],
+                            [
+                                'v28',
+                                0.24
+                            ],
+                            [
+                                'v27',
+                                0.17
+                            ],
+                            [
+                                'v29',
+                                0.16
+                            ]
+                        ]
+                    }]
+                }
+
+
+                //
+
+            });
+                    </script>
+                </div>
+                
+
+            </div>
+
+        </div>
+
+        <div><highchart type="column" categories="['Jan', 'Feb', 'Mar', 'Apr', 'May']"></highchart></div>
+    </body>
+</html>
